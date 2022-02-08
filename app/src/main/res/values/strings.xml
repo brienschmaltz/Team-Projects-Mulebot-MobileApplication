@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Team-Projects-MulebotApplication</string>
+    <string name="GPS_DATA_string">GPS Data:</string>
+    <string name="follow_string">Follow</string>
+    <string name="stop_string">Stop</string>
+    <string name="display_gps_data_string">Display GPS Data</string>
 </resources>
