@@ -7,49 +7,120 @@
     tools:context=".MainActivity">
 
     <TextView
-        android:id="@+id/gps_data_textview"
-        android:layout_width="179dp"
-        android:layout_height="47dp"
+        android:id="@+id/tv_lat"
+        android:layout_width="185dp"
+        android:layout_height="29dp"
         android:layout_marginTop="320dp"
-        android:text="@string/GPS_DATA_string"
+        android:layout_marginEnd="28dp"
+        android:layout_marginRight="28dp"
+        android:text="0.0"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.501"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_long"
+        android:layout_width="180dp"
+        android:layout_height="28dp"
+        android:layout_marginTop="352dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginRight="32dp"
+        android:text="0.0"
+        app:layout_constraintBottom_toTopOf="@+id/d_gps_perm_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <TextView
+        android:id="@+id/label_lat"
+        android:layout_width="82dp"
+        android:layout_height="29dp"
+        android:layout_marginTop="28dp"
+        android:text="Lat:"
+        app:layout_constraintEnd_toStartOf="@+id/tv_lat"
+        app:layout_constraintHorizontal_bias="0.87"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/d_button" />
+
+    <TextView
+        android:id="@+id/label_long"
+        android:layout_width="82dp"
+        android:layout_height="29dp"
+        android:layout_marginTop="4dp"
+        android:text="Long:"
+        app:layout_constraintEnd_toStartOf="@+id/tv_long"
+        app:layout_constraintHorizontal_bias="0.863"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/label_lat" />
+
+    <TextView
+        android:id="@+id/label_long2"
+        android:layout_width="122dp"
+        android:layout_height="29dp"
+        android:layout_marginStart="60dp"
+        android:layout_marginLeft="60dp"
+        android:text="Toggle Tracking:"
+        app:layout_constraintBottom_toTopOf="@+id/d_gps_perm_button"
+        app:layout_constraintEnd_toStartOf="@+id/sw_locationupdates"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/label_long"
+        app:layout_constraintVertical_bias="0.045" />
 
     <Button
         android:id="@+id/follow_button"
-        android:layout_width="181dp"
-        android:layout_height="110dp"
+        android:layout_width="174dp"
+        android:layout_height="102dp"
+        android:layout_marginTop="12dp"
         android:text="@string/follow_string"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/d_button"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.048"
+        app:layout_constraintHorizontal_bias="0.052"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.021" />
+        app:layout_constraintVertical_bias="0.0" />
 
     <Button
         android:id="@+id/d_button"
         android:layout_width="166dp"
         android:layout_height="57dp"
         android:text="@string/display_gps_data_string"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/tv_lat"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.332" />
+        app:layout_constraintVertical_bias="0.889" />
+
+    <Button
+        android:id="@+id/d_gps_perm_button"
+        android:layout_width="231dp"
+        android:layout_height="92dp"
+        android:layout_marginBottom="32dp"
+        android:text="@string/get_permissions_string"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/stop_button"
-        android:layout_width="180dp"
-        android:layout_height="108dp"
+        android:layout_width="174dp"
+        android:layout_height="102dp"
         android:text="@string/stop_string"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/tv_lat"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.951"
-        app:layout_constraintStart_toStartOf="@+id/follow_button"
+        app:layout_constraintHorizontal_bias="0.929"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.021" />
+        app:layout_constraintVertical_bias="0.057" />
+
+    <Switch
+        android:id="@+id/sw_locationupdates"
+        android:layout_width="60dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="148dp"
+        android:layout_marginRight="148dp"
+        app:layout_constraintBottom_toTopOf="@+id/d_gps_perm_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_long"
+        app:layout_constraintVertical_bias="0.045" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
