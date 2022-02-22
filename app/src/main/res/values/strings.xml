@@ -2,6 +2,8 @@
     <string name="app_name">Team-Projects-MulebotApplication</string>
     <string name="follow_string">Follow</string>
     <string name="stop_string">Stop</string>
-    <string name="display_gps_data_string">Display GPS Data</string>
+    <string name="display_gps_data_string">Get BLE permission</string>
     <string name="get_permissions_string">Get Fine GPS location permission</string>
+    <string name="bluetooth_not_supported">Bluetooth not supported</string>
+    <string name="ble_not_supported">Bluetooth LE not supported</string>
 </resources>

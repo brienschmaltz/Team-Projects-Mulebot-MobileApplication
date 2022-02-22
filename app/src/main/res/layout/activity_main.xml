@@ -34,12 +34,12 @@
         android:id="@+id/label_lat"
         android:layout_width="82dp"
         android:layout_height="29dp"
-        android:layout_marginTop="28dp"
-        android:text="Lat:"
+        android:layout_marginTop="205dp"
+        android:text="    Lat:"
         app:layout_constraintEnd_toStartOf="@+id/tv_lat"
         app:layout_constraintHorizontal_bias="0.87"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/d_button" />
+        app:layout_constraintTop_toBottomOf="@+id/follow_button" />
 
     <TextView
         android:id="@+id/label_long"
@@ -80,21 +80,20 @@
 
     <Button
         android:id="@+id/d_button"
-        android:layout_width="166dp"
-        android:layout_height="57dp"
+        android:layout_width="231dp"
+        android:layout_height="56dp"
         android:text="@string/display_gps_data_string"
-        app:layout_constraintBottom_toTopOf="@+id/tv_lat"
+        app:layout_constraintBottom_toTopOf="@+id/d_gps_perm_button"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.889" />
+        app:layout_constraintTop_toBottomOf="@+id/sw_locationupdates"
+        app:layout_constraintVertical_bias="0.442" />
 
     <Button
         android:id="@+id/d_gps_perm_button"
         android:layout_width="231dp"
         android:layout_height="92dp"
-        android:layout_marginBottom="32dp"
+        android:layout_marginBottom="52dp"
         android:text="@string/get_permissions_string"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

@@ -1,15 +1,20 @@
 package com.example.team_projects_mulebotapplication;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
+
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Switch;
@@ -23,12 +28,14 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import java.util.Set;
+
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
 public class MainActivity extends AppCompatActivity {
     TextView tv_lat, tv_long;
-    Button d_button, f_button, d_gps_perm_button;
+    Button d_button, d_gps_perm_button;
     Switch sw_locationupdates;
     String display_null = "Not live tracking";
 
@@ -41,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
     private LocationRequest locationRequest = LocationRequest.create();
 
 
+    //Bluetooth var creation
+    private final int REQUEST_ENABLE_BT = 4;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,14 +71,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //Button to get edit textView
+        //Button get bluetooth permissions
         d_button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                //Do something to text view
+                requestBluetoothPermission();
+                requestBluetoothAdminPermission();
             }
         });
 
-        //Switch button listener
+        //Switch button to toggle live GPS info to text views
         sw_locationupdates.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -84,7 +94,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //Define the location update callback. Unsure how this works
+        //The fused location provider invokes the LocationCallback.onLocationResult() callback method. (which is this small snippet of code)
+        // Which basically gives us a list "location" containing the lat and long.
+        //This is where I am not so sure how this works 100%
+        // we basically just grab the most current location result and throw it to the UI
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
@@ -97,12 +110,103 @@ public class MainActivity extends AppCompatActivity {
         };
 
         // Confirms permissions
-        requestLocationPermission();
+        //requestLocationPermission();
         //Creates a location request so that we can get this info, sets the parameters
         createLocationRequest();
-        //
+        //Sends location data to updateUI
         updateGPS();
+
+
     }
+
+    //Bluetooth code
+
+    private void startBluetooth() {
+
+        //Check for support
+
+        // Use this check to determine whether Bluetooth classic is supported on the device.
+        // Then you can selectively disable BLE-related features.
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)) {
+            Toast.makeText(this, R.string.bluetooth_not_supported, Toast.LENGTH_SHORT).show();
+            finish();
+        }
+        // Use this check to determine whether BLE is supported on the device. Then
+        // you can selectively disable BLE-related features.
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            Toast.makeText(this, R.string.ble_not_supported, Toast.LENGTH_SHORT).show();
+            finish();
+        }
+        //The BluetoothAdapter is required for any and all Bluetooth activity.
+        // The BluetoothAdapter represents the device's own Bluetooth adapter (the Bluetooth radio).
+        // There's one Bluetooth adapter for the entire system, and your app can interact with it using this object.
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        //Simple checks
+        if (bluetoothAdapter == null) {
+            // Device doesn't support Bluetooth
+        }
+        if (!bluetoothAdapter.isEnabled()) {
+            //Bluetooth is enabled!
+            //
+            // The following code snippet sets the device to be discoverable for two minutes:
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE).putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 120);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+
+            //Next
+
+            //Before performing device discovery, it's worth querying the set of paired devices to see if the desired device is already known.
+            Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+
+            if (pairedDevices.size() > 0) {
+                // There are paired devices. Get the name and address of each paired device.
+                for (BluetoothDevice device : pairedDevices) {
+                    String deviceName = device.getName();
+                    String deviceHardwareAddress = device.getAddress(); // MAC address
+                }
+            }
+        }
+    }
+    // Unsure what this code is doing
+
+    // More research into bluetooth
+
+    // Register for broadcasts when a device is discovered.
+    //IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+    //registerReceiver(receiver, filter);
+
+    // Unsure what this code is doing
+    // Create a BroadcastReceiver for ACTION_FOUND.
+    private final BroadcastReceiver receiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                // Discovery has found a device. Get the BluetoothDevice
+                // object and its info from the Intent.
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                String deviceName = device.getName();
+                String deviceHardwareAddress = device.getAddress(); // MAC address
+            }
+        }
+    };
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Don't forget to unregister the ACTION_FOUND receiver.
+        unregisterReceiver(receiver);
+
+    }
+
+    //Next
+
+
+
+    //Next
+
+
+
+
     //-----------------------------------
     //GPS data retrieval functions in order of how they run.
     //-----------------------------------
@@ -150,15 +254,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //-----------------------------------
-    //Code to request GPS permissions.
+    //Code to request GPS and Bluetooth permissions.
 
     // Pulled from https://stackoverflow.com/questions/40142331/how-to-request-location-permission-at-runtime
 
-    //Not sure how it works but it does!
+    //Not sure how it works but it does at least for the GPS permissions
 
     //Github doc: https://github.com/googlesamples/easypermissions
     //-----------------------------------
     private final int REQUEST_LOCATION_PERMISSION = 1;
+
+    private final int REQUEST_BLUETOOTH_PERMISSION = 2;
+
+    private final int REQUEST_BLUETOOTH_ADMIN_PERMISSION = 3;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -172,10 +280,31 @@ public class MainActivity extends AppCompatActivity {
     public void requestLocationPermission() {
         String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION};
         if(EasyPermissions.hasPermissions(this, perms)) {
-            Toast.makeText(this, "Permission already granted", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Location permission already granted", Toast.LENGTH_SHORT).show();
         }
         else {
             EasyPermissions.requestPermissions(this, "Please grant the location permission", REQUEST_LOCATION_PERMISSION, perms);
         }
     }
+    @AfterPermissionGranted(REQUEST_BLUETOOTH_ADMIN_PERMISSION )
+    public void requestBluetoothAdminPermission() {
+        String[] perms = {Manifest.permission.BLUETOOTH_ADMIN};
+        if(EasyPermissions.hasPermissions(this, perms)) {
+            Toast.makeText(this, "Admin Bluetooth permission already granted", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            EasyPermissions.requestPermissions(this, "Please grant the admin bluetooth permission", REQUEST_BLUETOOTH_ADMIN_PERMISSION , perms);
+        }
+    }
+    @AfterPermissionGranted(REQUEST_BLUETOOTH_PERMISSION)
+    public void requestBluetoothPermission() {
+        String[] perms = {Manifest.permission.BLUETOOTH};
+        if(EasyPermissions.hasPermissions(this, perms)) {
+            Toast.makeText(this, "Bluetooth permission already granted", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            EasyPermissions.requestPermissions(this, "Please grant the bluetooth permission", REQUEST_BLUETOOTH_PERMISSION, perms);
+        }
+    }
 }
+
