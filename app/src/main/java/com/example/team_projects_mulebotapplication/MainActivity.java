@@ -16,7 +16,10 @@ import android.location.Location;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,6 +31,7 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import java.util.ArrayList;
 import java.util.Set;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
@@ -39,7 +43,6 @@ public class MainActivity extends AppCompatActivity {
     Switch sw_locationupdates;
     String display_null = "Not live tracking";
 
-
     boolean requestingLocationUpdates = false;
 
     //GPS info var creation
@@ -50,6 +53,11 @@ public class MainActivity extends AppCompatActivity {
 
     //Bluetooth var creation
     private final int REQUEST_ENABLE_BT = 4;
+    ListView mDeviceList;
+    private BluetoothAdapter mBluetoothAdapter = null;
+    private Set <BluetoothDevice> mPairedDevices;
+
+    public static String EXTRA_ADDRESS = "device_address";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,9 +68,33 @@ public class MainActivity extends AppCompatActivity {
         //Attaching GUI to code
         d_button = findViewById(R.id.d_button);
         d_gps_perm_button = findViewById(R.id.d_gps_perm_button);
+
         tv_lat = findViewById(R.id.tv_lat);
         tv_long = findViewById(R.id.tv_long);
+
         sw_locationupdates = findViewById(R.id.sw_locationupdates);
+        mDeviceList = (ListView)findViewById(R.id.bluetooth_list_view);
+
+        //---------------------------------------
+        //New Bluetooth Code for ListView
+        //---------------------------------------
+
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        if(mBluetoothAdapter == null) {
+            Toast.makeText(getApplicationContext(), "Bluetooth Device Not Available", Toast.LENGTH_LONG).show();
+            finish();
+        }
+        else {
+            if (mBluetoothAdapter.isEnabled()) {
+                listPairedDevices();
+            }
+            else {
+                //Ask to the user turn the bluetooth on
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent,REQUEST_ENABLE_BT);
+            }
+        }
 
         //Button to get GPS permissions
         d_gps_perm_button.setOnClickListener(new View.OnClickListener() {
@@ -76,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 requestBluetoothPermission();
                 requestBluetoothAdminPermission();
+                //startBluetooth();
             }
         });
 
@@ -120,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //Bluetooth code
-
+/*
     private void startBluetooth() {
 
         //Check for support
@@ -155,6 +188,7 @@ public class MainActivity extends AppCompatActivity {
 
             //Next
 
+
             //Before performing device discovery, it's worth querying the set of paired devices to see if the desired device is already known.
             Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
 
@@ -167,9 +201,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-    // Unsure what this code is doing
-
-    // More research into bluetooth
 
     // Register for broadcasts when a device is discovered.
     //IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
@@ -197,6 +228,40 @@ public class MainActivity extends AppCompatActivity {
         unregisterReceiver(receiver);
 
     }
+ */
+    //New Bluetooth code for ListView
+
+    private void listPairedDevices() {
+        mPairedDevices = mBluetoothAdapter.getBondedDevices();
+        ArrayList list = new ArrayList();
+
+        if (mPairedDevices.size() > 0) {
+            for (BluetoothDevice bt : mPairedDevices) {
+                list.add(bt.getName() + "\n" + bt.getAddress());
+            }
+        } else {
+            Toast.makeText(getApplicationContext(), "No Paired Bluetooth Devices Found.", Toast.LENGTH_LONG).show();
+        }
+
+        final ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, list);
+        mDeviceList.setAdapter(adapter);
+        mDeviceList.setOnItemClickListener(myListClickListener); //Method called when the device from the list is clicked
+    }
+    private AdapterView.OnItemClickListener myListClickListener = new AdapterView.OnItemClickListener()
+    {
+        public void onItemClick (AdapterView av, View v, int arg2, long arg3)
+        {
+            // Get the device MAC address, the last 17 chars in the View
+            String info = ((TextView) v).getText().toString();
+            String address = info.substring(info.length() - 17);
+            // Make an intent to start next activity.
+            //Intent i = new Intent(DeviceListActivity.this, MyCommunicationsActivity.class);
+            //Change the activity.
+            //i.putExtra(EXTRA_ADDRESS, address); //this will be received at CommunicationsActivity
+            //startActivity(i);
+        }
+    };
+
 
     //Next
 
@@ -233,6 +298,7 @@ public class MainActivity extends AppCompatActivity {
                     });
         }
     }
+
     private void updateUI(Location location) {
         tv_lat.setText(String.valueOf(location.getLatitude()));
         tv_long.setText(String.valueOf(location.getLongitude()));
