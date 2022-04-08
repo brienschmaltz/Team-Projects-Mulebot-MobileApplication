@@ -1,28 +1,22 @@
 package com.example.team_projects_mulebotapplication;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
-
 import android.os.Bundle;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -31,7 +25,10 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 
-import java.util.ArrayList;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Set;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
@@ -39,7 +36,7 @@ import pub.devrel.easypermissions.EasyPermissions;
 
 public class MainActivity extends AppCompatActivity {
     TextView tv_lat, tv_long;
-    Button d_button, d_gps_perm_button;
+    Button d_button, d_gps_perm_button,f_button;
     Switch sw_locationupdates;
     String display_null = "Not live tracking";
 
@@ -66,6 +63,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         //Attaching GUI to code
+
+        f_button = findViewById(R.id.follow_button);
         d_button = findViewById(R.id.d_button);
         d_gps_perm_button = findViewById(R.id.d_gps_perm_button);
 
@@ -87,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
         }
         else {
             if (mBluetoothAdapter.isEnabled()) {
-                listPairedDevices();
+                //listPairedDevices();
             }
             else {
                 //Ask to the user turn the bluetooth on
@@ -95,7 +94,18 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(enableBtIntent,REQUEST_ENABLE_BT);
             }
         }
-
+        // Follow Button
+        f_button.setOnClickListener((new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String request = "http://10.16.127.6:8080/";
+                try {
+                    sendRequest(request);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }));
         //Button to get GPS permissions
         d_gps_perm_button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
@@ -150,6 +160,44 @@ public class MainActivity extends AppCompatActivity {
         updateGPS();
 
 
+
+    }
+    void sendRequest(String request) throws IOException {
+
+        Thread thread = new Thread(new Runnable(){
+            @Override
+            public void run(){
+                String test = "123";
+                //request = "http://localhost:8080";
+                URL url = null;
+                try {
+                    url = new URL(request);
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
+                HttpURLConnection connection = null;
+                try {
+                    connection = (HttpURLConnection) url.openConnection();
+                connection.setDoOutput(true);
+                connection.setInstanceFollowRedirects(false);
+                connection.setRequestMethod("PUT");
+                connection.setRequestProperty("Content-Type", "text/plain");
+                connection.setRequestProperty("charset", "utf-8");
+                connection.connect();
+                connection.getOutputStream().write(test.getBytes("UTF-8"));
+                connection.getOutputStream().flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        thread.start();
+
+
+        //Reader in = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+
+        //for (int c; (c = in.read()) >= 0;)
+            //System.out.print((char)c);
     }
 
     //Bluetooth code
@@ -231,6 +279,7 @@ public class MainActivity extends AppCompatActivity {
  */
     //New Bluetooth code for ListView
 
+    /*
     private void listPairedDevices() {
         mPairedDevices = mBluetoothAdapter.getBondedDevices();
         ArrayList list = new ArrayList();
@@ -262,7 +311,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-
+  */
     //Next
 
 
