@@ -2,15 +2,12 @@ package com.example.team_projects_mulebotapplication;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,11 +22,9 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Set;
+import java.net.Socket;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -50,11 +45,10 @@ public class MainActivity extends AppCompatActivity {
 
     //Bluetooth var creation
     private final int REQUEST_ENABLE_BT = 4;
-    ListView mDeviceList;
-    private BluetoothAdapter mBluetoothAdapter = null;
-    private Set <BluetoothDevice> mPairedDevices;
-
     public static String EXTRA_ADDRESS = "device_address";
+
+    //Misc var creation
+    public double global_lat, global_long;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,35 +66,15 @@ public class MainActivity extends AppCompatActivity {
         tv_long = findViewById(R.id.tv_long);
 
         sw_locationupdates = findViewById(R.id.sw_locationupdates);
-        mDeviceList = (ListView)findViewById(R.id.bluetooth_list_view);
 
-        //---------------------------------------
-        //New Bluetooth Code for ListView
-        //---------------------------------------
 
-        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-        if(mBluetoothAdapter == null) {
-            Toast.makeText(getApplicationContext(), "Bluetooth Device Not Available", Toast.LENGTH_LONG).show();
-            finish();
-        }
-        else {
-            if (mBluetoothAdapter.isEnabled()) {
-                //listPairedDevices();
-            }
-            else {
-                //Ask to the user turn the bluetooth on
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBtIntent,REQUEST_ENABLE_BT);
-            }
-        }
         // Follow Button
         f_button.setOnClickListener((new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String request = "http://10.16.127.6:8080/";
+                String hostname = "http://10.16.127.6:8080/";
                 try {
-                    sendRequest(request);
+                    sendData(hostname);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -118,7 +92,6 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 requestBluetoothPermission();
                 requestBluetoothAdminPermission();
-                //startBluetooth();
             }
         });
 
@@ -151,9 +124,6 @@ public class MainActivity extends AppCompatActivity {
                 updateUI(locationResult.getLastLocation());
             }
         };
-
-        // Confirms permissions
-        //requestLocationPermission();
         //Creates a location request so that we can get this info, sets the parameters
         createLocationRequest();
         //Sends location data to updateUI
@@ -162,30 +132,21 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-    void sendRequest(String request) throws IOException {
+    void sendData(String request) throws IOException {
 
         Thread thread = new Thread(new Runnable(){
             @Override
             public void run(){
-                String test = "123";
-                //request = "http://localhost:8080";
-                URL url = null;
+                Socket s = null;
+                String final_message = "Lat: " + global_lat + " Long: " + global_long;
                 try {
-                    url = new URL(request);
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
-                HttpURLConnection connection = null;
-                try {
-                    connection = (HttpURLConnection) url.openConnection();
-                connection.setDoOutput(true);
-                connection.setInstanceFollowRedirects(false);
-                connection.setRequestMethod("PUT");
-                connection.setRequestProperty("Content-Type", "text/plain");
-                connection.setRequestProperty("charset", "utf-8");
-                connection.connect();
-                connection.getOutputStream().write(test.getBytes("UTF-8"));
-                connection.getOutputStream().flush();
+                    s = new Socket("10.16.127.6", 8080);
+                    DataOutputStream dos = new DataOutputStream(s.getOutputStream());
+                    while (requestingLocationUpdates == true) {
+                        dos.writeUTF(final_message);
+                        SystemClock.sleep(3000);
+
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -193,132 +154,7 @@ public class MainActivity extends AppCompatActivity {
         });
         thread.start();
 
-
-        //Reader in = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
-
-        //for (int c; (c = in.read()) >= 0;)
-            //System.out.print((char)c);
     }
-
-    //Bluetooth code
-/*
-    private void startBluetooth() {
-
-        //Check for support
-
-        // Use this check to determine whether Bluetooth classic is supported on the device.
-        // Then you can selectively disable BLE-related features.
-        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)) {
-            Toast.makeText(this, R.string.bluetooth_not_supported, Toast.LENGTH_SHORT).show();
-            finish();
-        }
-        // Use this check to determine whether BLE is supported on the device. Then
-        // you can selectively disable BLE-related features.
-        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            Toast.makeText(this, R.string.ble_not_supported, Toast.LENGTH_SHORT).show();
-            finish();
-        }
-        //The BluetoothAdapter is required for any and all Bluetooth activity.
-        // The BluetoothAdapter represents the device's own Bluetooth adapter (the Bluetooth radio).
-        // There's one Bluetooth adapter for the entire system, and your app can interact with it using this object.
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-        //Simple checks
-        if (bluetoothAdapter == null) {
-            // Device doesn't support Bluetooth
-        }
-        if (!bluetoothAdapter.isEnabled()) {
-            //Bluetooth is enabled!
-            //
-            // The following code snippet sets the device to be discoverable for two minutes:
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE).putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 120);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-
-            //Next
-
-
-            //Before performing device discovery, it's worth querying the set of paired devices to see if the desired device is already known.
-            Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
-
-            if (pairedDevices.size() > 0) {
-                // There are paired devices. Get the name and address of each paired device.
-                for (BluetoothDevice device : pairedDevices) {
-                    String deviceName = device.getName();
-                    String deviceHardwareAddress = device.getAddress(); // MAC address
-                }
-            }
-        }
-    }
-
-    // Register for broadcasts when a device is discovered.
-    //IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-    //registerReceiver(receiver, filter);
-
-    // Unsure what this code is doing
-    // Create a BroadcastReceiver for ACTION_FOUND.
-    private final BroadcastReceiver receiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                // Discovery has found a device. Get the BluetoothDevice
-                // object and its info from the Intent.
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                String deviceName = device.getName();
-                String deviceHardwareAddress = device.getAddress(); // MAC address
-            }
-        }
-    };
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // Don't forget to unregister the ACTION_FOUND receiver.
-        unregisterReceiver(receiver);
-
-    }
- */
-    //New Bluetooth code for ListView
-
-    /*
-    private void listPairedDevices() {
-        mPairedDevices = mBluetoothAdapter.getBondedDevices();
-        ArrayList list = new ArrayList();
-
-        if (mPairedDevices.size() > 0) {
-            for (BluetoothDevice bt : mPairedDevices) {
-                list.add(bt.getName() + "\n" + bt.getAddress());
-            }
-        } else {
-            Toast.makeText(getApplicationContext(), "No Paired Bluetooth Devices Found.", Toast.LENGTH_LONG).show();
-        }
-
-        final ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, list);
-        mDeviceList.setAdapter(adapter);
-        mDeviceList.setOnItemClickListener(myListClickListener); //Method called when the device from the list is clicked
-    }
-    private AdapterView.OnItemClickListener myListClickListener = new AdapterView.OnItemClickListener()
-    {
-        public void onItemClick (AdapterView av, View v, int arg2, long arg3)
-        {
-            // Get the device MAC address, the last 17 chars in the View
-            String info = ((TextView) v).getText().toString();
-            String address = info.substring(info.length() - 17);
-            // Make an intent to start next activity.
-            //Intent i = new Intent(DeviceListActivity.this, MyCommunicationsActivity.class);
-            //Change the activity.
-            //i.putExtra(EXTRA_ADDRESS, address); //this will be received at CommunicationsActivity
-            //startActivity(i);
-        }
-    };
-
-  */
-    //Next
-
-
-
-    //Next
-
-
 
 
     //-----------------------------------
@@ -338,6 +174,8 @@ public class MainActivity extends AppCompatActivity {
                         public void onSuccess(Location location) {
                             // Got last known location. In some rare situations this can be null.
                             if (location != null) {
+                                global_lat = location.getLatitude();
+                                global_long = location.getLongitude();
                                 updateUI(location);
                             } else {
                                 tv_lat.setText("0.0");
