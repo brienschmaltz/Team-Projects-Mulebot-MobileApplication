@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
     public static String EXTRA_ADDRESS = "device_address";
 
     //Misc var creation
-    public double global_lat, global_long;
+    public float global_lat, global_long;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,9 +72,9 @@ public class MainActivity extends AppCompatActivity {
         f_button.setOnClickListener((new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String hostname = "http://10.16.127.6:8080/";
+                String ip= "192.168.0.127";
                 try {
-                    sendData(hostname);
+                    sendData(ip);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -140,7 +140,10 @@ public class MainActivity extends AppCompatActivity {
                 Socket s = null;
                 String final_message = "Lat: " + global_lat + " Long: " + global_long;
                 try {
-                    s = new Socket("10.16.127.6", 8080);
+                    //Wright State use this: 10.16.127.6
+                    //Home use this: 192.168.0.127"
+                    System.out.print(request);
+                    s = new Socket(request, 8080);
                     DataOutputStream dos = new DataOutputStream(s.getOutputStream());
                     while (requestingLocationUpdates == true) {
                         dos.writeUTF(final_message);
@@ -161,8 +164,10 @@ public class MainActivity extends AppCompatActivity {
     //GPS data retrieval functions in order of how they run.
     //-----------------------------------
     private void createLocationRequest() {
-        locationRequest.setInterval(10000);
-        locationRequest.setFastestInterval(5000);
+        //Was 100000
+        // Fastest  5000
+        locationRequest.setInterval(6000);
+        locationRequest.setFastestInterval(1000);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
     private void updateGPS() {
@@ -174,8 +179,8 @@ public class MainActivity extends AppCompatActivity {
                         public void onSuccess(Location location) {
                             // Got last known location. In some rare situations this can be null.
                             if (location != null) {
-                                global_lat = location.getLatitude();
-                                global_long = location.getLongitude();
+                                global_lat = (float) location.getLatitude();
+                                global_long = (float) location.getLongitude();
                                 updateUI(location);
                             } else {
                                 tv_lat.setText("0.0");

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">-------------------Mule-App------------------</string>
+    <string name="app_name">Mule-App</string>
     <string name="follow_string">Follow</string>
     <string name="stop_string">Stop</string>
     <string name="display_gps_data_string">Get BLE permissions</string>
