@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
         f_button.setOnClickListener((new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String ip= "192.168.0.127";
+                String ip= "192.168.42.1";
                 try {
                     sendData(ip);
                 } catch (IOException e) {
